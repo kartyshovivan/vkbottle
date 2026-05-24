@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -6,7 +5,7 @@ from aiohttp import ClientTimeout
 from typing_extensions import Self
 
 from vkbottle.exception_factory import ErrorHandler
-from vkbottle.modules import logger
+from vkbottle.modules import json, logger
 
 from .base import BasePolling
 
