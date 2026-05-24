@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 import pydantic
 from vkbottle_types.objects import MessagesConversationMember
@@ -32,36 +32,15 @@ class MessageMin(BaseMessageMin):
 
 MessageMin.object_build(locals())
 
-MESSAGE_FETCH_ATTEMPTS: Final = 3
-MESSAGE_FETCH_RETRY_DELAY: Final = 0.1
-
 
 async def message_min(
     message_id: int,
     ctx_api: "ABCAPI",
     replace_mention: bool = True,
-    fetch_attempts: int = MESSAGE_FETCH_ATTEMPTS,
-    fetch_retry_delay: float = MESSAGE_FETCH_RETRY_DELAY,
 ) -> "MessageMin":
-    response = None
+    response = await ctx_api.messages.get_by_id(message_ids=[message_id])
 
-    for attempt in range(1, fetch_attempts + 1):
-        response = await ctx_api.messages.get_by_id(message_ids=[message_id])
-
-        if response.items:
-            break
-
-        if attempt < fetch_attempts:
-            logger.debug(
-                "Message with id {} not found on attempt {}/{}, retrying after {} seconds.",
-                message_id,
-                attempt,
-                fetch_attempts,
-                fetch_retry_delay,
-            )
-            await asyncio.sleep(fetch_retry_delay)
-
-    if response is None or not response.items:
+    if not response.items:
         logger.warning(f"Message with id {message_id} not found, perhaps it was deleted.")
         raise asyncio.CancelledError  # Cancel current task
 
