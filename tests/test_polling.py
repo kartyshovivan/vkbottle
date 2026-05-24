@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import pytest
@@ -15,6 +16,11 @@ EXAMPLE_EVENT = {
         },
     ],
 }
+
+
+@pytest.fixture(autouse=True)
+def polling_state_tmp_path(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
 
 
 def make_bot_polling() -> tuple[BotPolling, API]:
@@ -231,6 +237,20 @@ def test_bot_skips_old_events_by_default():
     assert bot.skip_old_events is True
     assert isinstance(bot.polling, BotPolling)
     assert bot.polling.skip_old_events is True
+
+
+@pytest.mark.asyncio
+async def test_bot_polling_saves_ts_when_skipping_old_events():
+    client = OldEventsClient(server_ts=10, event_ts=11)
+    api = API("token")
+    api.http_client = client
+    polling = BotPolling(api=api)
+
+    async for _event in polling.listen():
+        polling.stop()
+
+    assert client.longpoll_requests[0]["ts"] == 10
+    assert json.loads(polling.ts_state_path.read_text(encoding="utf-8")) == {"ts": 11}
 
 
 @pytest.mark.asyncio

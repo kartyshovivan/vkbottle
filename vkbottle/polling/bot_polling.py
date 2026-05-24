@@ -65,9 +65,6 @@ class BotPolling(BasePolling):
         return server
 
     def save_server_ts(self, server: dict[str, Any]) -> None:
-        if self.skip_old_events:
-            return
-
         path = self.ts_state_path
         path.parent.mkdir(parents=True, exist_ok=True)
         temp_path = path.with_suffix(".tmp")
